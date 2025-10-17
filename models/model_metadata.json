@@ -1,0 +1,8 @@
+{
+  "model_name": "LinearRegression SOH Baseline",
+  "version": "0.1.0",
+  "trained_on": "<YYYY-MM-DD>",
+  "data_version": "cleaned_pulsebat.csv",
+  "metrics": { "r2": null, "mse": null, "mae": null },
+  "notes": "Fill after training in Sprint 2."
+}
