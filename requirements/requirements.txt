@@ -6,3 +6,4 @@ streamlit
 openai
 python-dotenv
 joblib
+openpyxl
