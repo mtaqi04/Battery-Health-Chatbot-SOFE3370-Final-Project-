@@ -74,15 +74,15 @@ OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "results", "predicted_soh_with_labe
 
 # --- Step 2: Load trained model ---
 if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"❌ Model file not found at {MODEL_PATH}")
+    raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 model = joblib.load(MODEL_PATH)
-print(f"✅ Model loaded successfully from: {MODEL_PATH}\n")
+print(f"Model loaded successfully from: {MODEL_PATH}\n")
 
 # --- Step 3: Load test dataset and select features ---
 if not os.path.exists(DATA_PATH):
-    raise FileNotFoundError(f"❌ Data file not found at {DATA_PATH}")
+    raise FileNotFoundError(f"Data file not found at {DATA_PATH}")
 df = pd.read_csv(DATA_PATH)
-print(f"✅ Data loaded from: {DATA_PATH} (shape {df.shape})")
+print(f"Data loaded from: {DATA_PATH} (shape {df.shape})")
 
 # Ensure we use exactly the 21 features the model expects
 feature_cols = [f"U{i}" for i in range(1, 22)]
@@ -102,7 +102,7 @@ if X_test_df.shape[1] != 21:
     raise ValueError(f"Expected 21 feature columns (U1..U21), but got {X_test_df.shape[1]} columns: {list(X_test_df.columns)}")
 
 X_test = X_test_df.values
-print(f"✅ Using feature matrix of shape: {X_test.shape}")
+print(f"Using feature matrix of shape: {X_test.shape}")
 
 # --- Step 4: Predict numeric SOH values ---
 y_pred = model.predict(X_test)
@@ -120,16 +120,16 @@ results = pd.DataFrame({
 })
 
 # --- Step 7: Display summary ---
-print("=== 🔋 Battery SOH Prediction Results (Preview) ===")
+print("=== Battery SOH Prediction Results (Preview) ===")
 print(results.head())
 
 counts = results["Condition"].value_counts()
 total = len(results)
-print("\n=== 📊 Condition Summary ===")
+print("\n=== Condition Summary ===")
 for label, count in counts.items():
     print(f"{label}: {count} ({count / total * 100:.2f}%)")
 
 # --- Step 8: Save results ---
 os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 results.to_csv(OUTPUT_PATH, index=False)
-print(f"\n✅ Results saved to: {OUTPUT_PATH}")
+print(f"\nResults saved to: {OUTPUT_PATH}")
