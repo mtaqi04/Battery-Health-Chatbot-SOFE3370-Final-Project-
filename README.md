@@ -4,7 +4,7 @@ An intelligent system that predicts the **State of Health (SOH)** of retired lit
 The chatbot allows users to check battery health predictions and ask general questions related to battery maintenance, recycling, and performance through natural conversation.
 
 The project follows an **Agile development methodology** over 7 weeks, with each sprint focusing on a key stage — from data preprocessing and model training to chatbot integration and testing.
-
+ 
 ---
 
 ## 📘 Table of Contents
