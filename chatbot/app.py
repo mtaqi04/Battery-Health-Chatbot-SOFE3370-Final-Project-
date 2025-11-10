@@ -9,6 +9,37 @@ import streamlit as st
 import re
 from predict_soh import load_model, predict_soh, DEFAULT_THRESHOLD
 
+import openai
+from dotenv import load_dotenv
+import os
+
+# Loading Api key
+
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+#keytest
+def bot_reply(user_text: str, threshold: float, model) -> str:
+    print("Loaded API Key:", os.getenv("OPENAI_API_KEY"))
+    ...
+
+
+# Helper function for chatgpt
+
+def ask_chatgpt(message):
+    client = openai.OpenAI()  # This creates the client
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful expert on batteries and battery health."},
+            {"role": "user", "content": message}
+        ],
+        max_tokens=300
+    )
+    return response.choices[0].message.content
+
+
+
 st.set_page_config(page_title="Battery Health Chatbot", page_icon="🔋", layout="centered")
 
 # ----- Sidebar -----
@@ -140,7 +171,7 @@ def bot_reply(user_text: str, threshold: float, model) -> str:
             "Or type 'help' for more information."
         )
     
-    # Default: generic response (can be enhanced with ChatGPT later)
+    """Default: generic response (can be enhanced with ChatGPT later)
     return (
         f"I understand you said: **{user_text}**\n\n"
         "I can help you with:\n"
@@ -148,7 +179,11 @@ def bot_reply(user_text: str, threshold: float, model) -> str:
         "- **Questions about SOH**: Ask 'what is SOH?' or 'explain SOH'\n"
         "- **Help**: Type 'help' for usage instructions\n\n"
         "*(ChatGPT integration coming soon for general questions)*"
-    )
+    )"""
+
+    # For any query not matched above, use ChatGPT for response
+    return ask_chatgpt(user_text)
+
 
 # ----- Chat Input -----
 if user := st.chat_input("Provide voltage readings (U1-U21) or ask a question..."):
