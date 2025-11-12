@@ -22,9 +22,14 @@ DEFAULT_THRESHOLD = 0.6
 
 # --- Step 2: Path Configuration ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(SCRIPT_DIR, "..", "models", "soh_linear_model.pkl")
-DATA_PATH = os.path.join(SCRIPT_DIR, "..", "data", "cleaned_pulsebat.csv")
-OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "results", "predicted_soh_with_labels.csv")
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)  # Navigate up from /chatbot to project root
+
+MODEL_PATH = os.path.normpath(os.path.join(PROJECT_ROOT, "models", "soh_linear_model.pkl"))
+DATA_PATH = os.path.normpath(os.path.join(PROJECT_ROOT, "data", "cleaned_pulsebat.csv"))
+OUTPUT_PATH = os.path.normpath(os.path.join(PROJECT_ROOT, "results", "predicted_soh_with_labels.csv"))
+
+print(f"DEBUG: MODEL_PATH = {MODEL_PATH}")
+print(f"DEBUG: Checking if file exists: {os.path.exists(MODEL_PATH)}")
 
 # --- Step 3: Classification Function ---
 def classify_soh(value, threshold=None):
