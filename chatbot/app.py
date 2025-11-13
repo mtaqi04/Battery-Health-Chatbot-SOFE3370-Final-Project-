@@ -3,6 +3,7 @@
 # Run locally:
 #   python3 -m pip install streamlit
 #   streamlit run chatbot/app.py
+#   python3 -m streamlit run chatbot/app.py
 
 import time
 import streamlit as st
