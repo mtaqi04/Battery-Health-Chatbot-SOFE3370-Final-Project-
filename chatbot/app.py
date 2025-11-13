@@ -22,11 +22,18 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Helper function for gemini
 
-def ask_gemini(message):
+def ask_gemini(user_input, threshold):
+    context = (
+        f"You are a battery health expert chatbot for technical and non-technical users. "
+        f"SOH (State of Health) is a value between 0 and 1; batteries with SOH ≥ {threshold} are considered healthy. "
+        "If asked about battery maintenance, recycling, common lifespan problems, storage, or voltage readings, give specific, actionable advice. "
+        "Refer users to provide 21 voltage readings (U1-U21) for prediction-related queries. "
+        "Use concise, yet detailed explanations. Avoid vague or generic answers."
+    )
+    prompt = context + "\n\nUser: " + user_input
     model = genai.GenerativeModel("gemini-2.0-flash-lite")
-    response = model.generate_content(message)
+    response = model.generate_content(prompt)
     return response.text
-
 
 st.set_page_config(page_title="Battery Health Chatbot", page_icon="🔋", layout="centered")
 
@@ -159,18 +166,9 @@ def bot_reply(user_text: str, threshold: float, model) -> str:
             "Or type 'help' for more information."
         )
     
-    """Default: generic response (can be enhanced with ChatGPT later)
-    return (
-        f"I understand you said: **{user_text}**\n\n"
-        "I can help you with:\n"
-        "- **Battery health prediction**: Provide 21 voltage readings (U1-U21)\n"
-        "- **Questions about SOH**: Ask 'what is SOH?' or 'explain SOH'\n"
-        "- **Help**: Type 'help' for usage instructions\n\n"
-        "*(ChatGPT integration coming soon for general questions)*"
-    )"""
 
     # For any query not matched above, use ChatGPT for response
-    return ask_gemini(user_text)
+    return ask_gemini(user_text, threshold)
 
 
 # ----- Chat Input -----
