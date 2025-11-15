@@ -3,6 +3,7 @@
 # Run locally:
 #   python3 -m pip install streamlit
 #   streamlit run chatbot/app.py
+#   python3 -m streamlit run chatbot/app.py
 
 import time
 import streamlit as st
@@ -17,12 +18,28 @@ import os
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
+
+# Flag: is Gemini actually usable?
+GEMINI_ENABLED = bool(GEMINI_API_KEY)
+
+if GEMINI_ENABLED:
+    genai.configure(api_key=GEMINI_API_KEY)
+else:
+    print("⚠️ No GEMINI_API_KEY found. Gemini answers will be disabled.")
 
 
 # Helper function for gemini
 
 def ask_gemini(user_input, threshold):
+    # If there is no API key, do NOT call Gemini at all
+    if not GEMINI_ENABLED:
+        return (
+            "⚠️ Gemini API is not configured on this machine.\n\n"
+            "I can still help you with **battery SOH predictions** if you provide "
+            "21 voltage readings (U1–U21) using the command:\n\n"
+            "`check battery soh: <21 comma-separated values>`"
+        )
+
     context = (
         f"You are a battery health expert chatbot for technical and non-technical users. "
         f"SOH (State of Health) is a value between 0 and 1; batteries with SOH ≥ {threshold} are considered healthy. "
@@ -35,7 +52,22 @@ def ask_gemini(user_input, threshold):
     response = model.generate_content(prompt)
     return response.text
 
+
 st.set_page_config(page_title="Battery Health Chatbot", page_icon="🔋", layout="centered")
+
+def extract_voltages_from_text(text: str) -> list[float]:
+    """
+    Extract numeric values from the user's message.
+
+    Example:
+      "check battery soh: 3.91, 3.90, 3.88, ..." → [3.91, 3.90, 3.88, ...]
+
+    Returns:
+        List of floats (may be wrong length; caller must validate).
+    """
+    numbers = re.findall(r"[-+]?\d*\.?\d+", text)
+    return [float(n) for n in numbers]
+
 
 # ----- Sidebar -----
 with st.sidebar:
@@ -118,56 +150,49 @@ def format_prediction_response(prediction_result: dict, threshold: float) -> str
 
 # ----- Bot Reply Function -----
 def bot_reply(user_text: str, threshold: float, model) -> str:
-    """Process user input and generate appropriate response."""
-    t = user_text.strip().lower()
-    
-    # Check if user wants help
-    if "help" in t or "how" in t or "what can you do" in t:
-        return (
-            "**I can help you with:**\n\n"
-            "1. **Battery Health Prediction**: Provide 21 voltage readings (U1-U21)\n"
-            "   - Format: comma or space-separated numbers\n"
-            "   - Example: `0.0025,0.0125,0.0035,...,0.0025` (21 values)\n\n"
-            "2. **General Questions**: Ask me anything about battery health, maintenance, or recycling\n\n"
-            "3. **SOH Explanation**: Ask what SOH means or how to interpret results\n\n"
-            "**Tip:** Adjust the threshold in the sidebar to change classification criteria!"
-        )
-    
-    # Check if user is asking about SOH
-    if "soh" in t and ("what" in t or "mean" in t or "explain" in t):
-        return (
-            "**State of Health (SOH)** is a measure of battery condition:\n\n"
-            f"- **Range**: 0.0 to 1.0 (or 0% to 100%)\n"
-            f"- **Healthy**: SOH ≥ {threshold} (good condition)\n"
-            f"- **Has a Problem**: SOH < {threshold} (may need attention)\n\n"
-            "SOH indicates remaining capacity compared to a new battery."
-        )
-    
-    # Try to extract features for prediction
-    features = extract_features_from_text(user_text)
-    
-    if features:
-        # User provided voltage readings - run prediction
-        if model is None:
-            return "❌ **Error**: Model not loaded. Please refresh the page."
-        
-        try:
-            prediction_result = predict_soh(features, threshold=threshold, model=model)
-            return format_prediction_response(prediction_result, threshold)
-        except Exception as e:
-            return f"❌ **Error during prediction**: {str(e)}\n\nPlease check your input format and try again."
-    
-    # Check for "check battery soh" or similar without features
-    if "check" in t and ("battery" in t or "soh" in t):
-        return (
-            "To check battery health, please provide 21 voltage readings (U1-U21).\n\n"
-            "**Example input:**\n"
-            "`0.0025,0.0125,0.0035,0.0019,0.0027,0.0057,0.0193,0.0202,0.0027,0.0197,0.0062,0.0042,0.0019,0.0157,0.0484,0.0508,0.0027,0.0346,0.0101,0.0119,0.0025`\n\n"
-            "Or type 'help' for more information."
-        )
-    
+    """
+    Route user message either to:
+      - SOH prediction (if 'check battery soh' command detected)
+      - Gemini Q&A (for general questions)
+    """
+    text_lower = user_text.lower()
 
-    # For any query not matched above, use ChatGPT for response
+    # SOH prediction command
+    if "check battery soh" in text_lower:
+        if model is None:
+            return (
+                "⚠️ The SOH prediction model is not loaded. "
+                "Please make sure `models/soh_linear_model.pkl` exists and was "
+                "generated by the training notebook."
+            )
+
+        voltages = extract_voltages_from_text(user_text)
+
+        if len(voltages) != 21:
+            return (
+                "To check battery SOH, please provide **21 voltage readings (U1–U21)** "
+                "after the command.\n\n"
+                "Example:\n"
+                "`check battery soh: 3.91, 3.90, 3.88, 3.87, 3.89, 3.90, 3.91, "
+                "3.92, 3.90, 3.89, 3.88, 3.87, 3.86, 3.85, 3.84, 3.83, 3.82, "
+                "3.81, 3.80, 3.79, 3.78`"
+            )
+
+        # Use the existing single-sample prediction function
+        result = predict_soh(voltages, threshold=threshold, model=model)
+        soh = result["soh"]
+        condition = result["condition"]  # "Healthy" or "Has a Problem"
+
+        emoji = "✅" if condition == "Healthy" else "⚠️"
+
+        return (
+            f"{emoji} **Predicted SOH:** `{soh:.4f}`\n"
+            f"Threshold: `{threshold:.2f}` → Status: **{condition}**\n\n"
+            "You can ask follow-up questions about maintenance, lifespan, "
+            "or charging based on this result."
+        )
+
+    # Default: sending to Gemini for general battery questions
     return ask_gemini(user_text, threshold)
 
 
