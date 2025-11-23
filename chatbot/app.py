@@ -4,48 +4,42 @@
 #   python3 -m pip install streamlit
 #   streamlit run chatbot/app.py
 #   python3 -m streamlit run chatbot/app.py
-#----------------------------------------
-# Another way to run:
-# Create a virtual enviornement using py -m venv .venv
-# Activate it using .venv\Scripts\activate.ps1 (Windows) or source .venv/bin/activate (MacOS/Linux)
-# Install depedencies using py -m pip install streamlit
-# If running errors occur, try installing additional dependencies using: pip install -r requirements.txt
-# Run the app using streamlit run chatbot/app.py
-#----------------------------------------
+
 
 import time
 import streamlit as st
 import re
 from predict_soh import load_model, predict_soh, DEFAULT_THRESHOLD
 
-import openai
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
 # Loading Api key
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 #keytest
 def bot_reply(user_text: str, threshold: float, model) -> str:
-    print("Loaded API Key:", os.getenv("OPENAI_API_KEY"))
+    print("Loaded API Key:", os.getenv("GEMINI_API_KEY"))
     ...
 
 
-# Helper function for chatgpt
+# Helper function for Gemini
 
-def ask_chatgpt(message):
-    client = openai.OpenAI()  # This creates the client
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful expert on batteries and battery health."},
-            {"role": "user", "content": message}
-        ],
-        max_tokens=300
+def ask_gemini(message):
+    model = genai.GenerativeModel("gemini-2.0-flash-lite")
+
+    response = model.generate_content(
+        [
+            "You are a helpful expert on batteries and battery health.",
+            message
+        ]
     )
-    return response.choices[0].message.content
+
+    # Gemini responses differ slightly—use .text
+    return response.text
 
 
 
@@ -189,7 +183,7 @@ def bot_reply(user_text: str, threshold: float, model) -> str:
         )
     
     # For any query not matched above, use ChatGPT for response
-    return ask_chatgpt(user_text)
+    return ask_gemini(user_text)
 
 
 # ----- Process sidebar quick SOH request -----
