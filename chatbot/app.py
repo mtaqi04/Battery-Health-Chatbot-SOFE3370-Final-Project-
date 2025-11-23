@@ -77,6 +77,12 @@ with st.sidebar:
     st.subheader("SOH Threshold")
     threshold = st.slider("Classification threshold", min_value=0.4, max_value=0.9, value=0.6, step=0.05)
     st.caption(f"Batteries with SOH ≥ {threshold} are classified as **Healthy**")
+    # Move button here
+    st.divider()
+    st.subheader("🔍 Quick Battery SOH Check")
+    if st.button("Check Battery SOH"):
+        # Set a flag instead of running prediction immediately
+        st.session_state["quick_soh_request"] = True
     st.divider()
     st.markdown("**Team:** Mohammad • Logan • Titobi • Nicholas • Mohit")
 
@@ -194,6 +200,49 @@ def bot_reply(user_text: str, threshold: float, model) -> str:
 
     # Default: sending to Gemini for general battery questions
     return ask_gemini(user_text, threshold)
+
+# ----- Process sidebar quick SOH request -----
+if st.session_state.get("quick_soh_request", False):
+    st.session_state["quick_soh_request"] = False  # reset flag
+
+    test_data = [
+        0.0025, 0.0125, 0.0035, 0.0019, 0.0027, 0.0057, 0.0193,
+        0.0202, 0.0027, 0.0197, 0.0062, 0.0042, 0.0019, 0.0157,
+        0.0484, 0.0508, 0.0027, 0.0346, 0.0101, 0.0119, 0.0025
+    ]
+
+    if "model" not in st.session_state or st.session_state.model is None:
+        st.warning("⚠️ Model not loaded. Please refresh the page.")
+    else:
+        try:
+            prediction_result = predict_soh(test_data, threshold=threshold, model=st.session_state.model)
+
+            # Inline formatting (avoids calling format_prediction_response to prevent NameError)
+            soh = prediction_result.get('soh')
+            condition = prediction_result.get('condition')
+            emoji = "✅" if condition == "Healthy" else "⚠️"
+
+            soh_reply = (
+                f"{emoji} **Battery Health Prediction Results**\n\n"
+                f"**Predicted SOH:** {soh:.4f}\n\n"
+                f"**Status:** {condition}\n"
+                f"**Classification Threshold:** {threshold}\n\n"
+            )
+            if condition == "Healthy":
+                soh_reply += f"✅ This battery is in good condition (SOH ≥ {threshold})"
+            else:
+                soh_reply += f"⚠️ This battery may have issues (SOH < {threshold})"
+
+            st.success("✅ Battery SOH Check Completed!")
+            st.markdown(soh_reply)
+
+            # Append result to chat history
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": soh_reply
+            })
+        except Exception as e:
+            st.error(f"❌ Error during SOH check: {e}")
 
 
 # ----- Chat Input -----
