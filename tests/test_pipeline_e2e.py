@@ -283,7 +283,7 @@ class PipelineTester:
                     "classification_correct": classification_correct
                 }
                 
-                print(f"Threshold {threshold}: SOH={soh:.4f} → {condition} (Correct: {classification_correct})")
+                print(f"Threshold {threshold}: SOH={soh:.4f} -> {condition} (Correct: {classification_correct})")
             
             # Test batch classification distribution
             batch_result_06 = predict_soh_batch(threshold=0.6)
@@ -352,7 +352,7 @@ class PipelineTester:
                     "predictions": [float(p) for p in predictions],
                     "mean": float(mean_pred),
                     "std": float(std_pred),
-                    "is_consistent": is_consistent
+                    "is_consistent": bool(is_consistent)
                 },
                 "multi_sample_test": multi_sample_results
             }
@@ -542,8 +542,26 @@ class PipelineTester:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         results_file = TEST_RESULTS_DIR / f"pipeline_test_{timestamp}.json"
         
-        with open(results_file, 'w') as f:
-            json.dump(self.results, f, indent=2)
+        # Convert numpy types to native Python types for JSON serialization
+        def convert_to_serializable(obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, (np.bool_, bool)):
+                return bool(obj)
+            elif isinstance(obj, dict):
+                return {key: convert_to_serializable(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_to_serializable(item) for item in obj]
+            return obj
+        
+        serializable_results = convert_to_serializable(self.results)
+        
+        with open(results_file, 'w', encoding='utf-8') as f:
+            json.dump(serializable_results, f, indent=2, ensure_ascii=False)
         
         # Print summary
         print("\n" + "="*60)
