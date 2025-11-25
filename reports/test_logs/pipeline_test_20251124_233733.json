@@ -1,0 +1,177 @@
+{
+  "test_timestamp": "2025-11-24T23:37:26.932511",
+  "data_preprocessing": {
+    "status": "PASS",
+    "total_samples": 670,
+    "features_count": 21,
+    "missing_values": 0,
+    "invalid_soh_count": 0,
+    "numeric_types": true,
+    "soh_range": {
+      "min": 0.6123809523809524,
+      "max": 0.923,
+      "mean": 0.8168479033404407
+    }
+  },
+  "model_loading": {
+    "status": "PASS",
+    "model_path": "c:\\Users\\titob\\OneDrive\\Desktop\\Design and analysis\\Project\\Battery-Health-Chatbot-SOFE3370-Final-Project-\\models\\soh_linear_model.pkl",
+    "has_intercept": true,
+    "has_coefficients": true,
+    "coefficient_count": 21,
+    "can_predict": true,
+    "test_prediction": 0.4789557079536908
+  },
+  "predictions": {
+    "status": "PASS",
+    "single_prediction": {
+      "has_soh": true,
+      "has_condition": true,
+      "soh_value": 0.9378666009513407,
+      "soh_valid": true,
+      "condition": "Healthy",
+      "condition_valid": true
+    },
+    "batch_prediction": {
+      "sample_count": 670,
+      "expected_count": 670
+    },
+    "accuracy_sample": {
+      "sample_size": 10,
+      "mae": 0.02218491860374412,
+      "mse": 0.0006558385607941362,
+      "rmse": 0.025609345184797995
+    }
+  },
+  "classification": {
+    "status": "PASS",
+    "threshold_tests": {
+      "0.5": {
+        "soh": 0.9378666009513407,
+        "condition": "Healthy",
+        "classification_correct": true
+      },
+      "0.6": {
+        "soh": 0.9378666009513407,
+        "condition": "Healthy",
+        "classification_correct": true
+      },
+      "0.7": {
+        "soh": 0.9378666009513407,
+        "condition": "Healthy",
+        "classification_correct": true
+      },
+      "0.8": {
+        "soh": 0.9378666009513407,
+        "condition": "Healthy",
+        "classification_correct": true
+      }
+    },
+    "batch_classification_06": {
+      "total_samples": 670,
+      "condition_distribution": {
+        "Healthy": 670
+      }
+    }
+  },
+  "consistency": {
+    "status": "PASS",
+    "same_sample_runs": {
+      "runs": 5,
+      "predictions": [
+        0.9378666009513407,
+        0.9378666009513407,
+        0.9378666009513407,
+        0.9378666009513407,
+        0.9378666009513407
+      ],
+      "mean": 0.9378666009513406,
+      "std": 1.1102230246251565e-16,
+      "is_consistent": true
+    },
+    "multi_sample_test": {
+      "sample_0": {
+        "soh": 0.9378666009513407,
+        "condition": "Healthy",
+        "actual_soh": 0.9121428571428573
+      },
+      "sample_10": {
+        "soh": 0.7746096722630851,
+        "condition": "Healthy",
+        "actual_soh": 0.7983333333333333
+      },
+      "sample_50": {
+        "soh": 0.6750109269780454,
+        "condition": "Healthy",
+        "actual_soh": 0.6995238095238095
+      },
+      "sample_100": {
+        "soh": 0.6795917555316877,
+        "condition": "Healthy",
+        "actual_soh": 0.6123809523809524
+      },
+      "sample_200": {
+        "soh": 0.7377170442947585,
+        "condition": "Healthy",
+        "actual_soh": 0.6598095238095237
+      }
+    }
+  },
+  "errors": [],
+  "chatbot_integration": {
+    "status": "PASS",
+    "input_parsing": {
+      "format_1": {
+        "input_length": 146,
+        "features_extracted": true,
+        "feature_count": 21,
+        "prediction_valid": true,
+        "soh": 0.9373165429527462,
+        "condition": "Healthy"
+      },
+      "format_2": {
+        "input_length": 146,
+        "features_extracted": true,
+        "feature_count": 21,
+        "prediction_valid": true,
+        "soh": 0.9373165429527462,
+        "condition": "Healthy"
+      },
+      "format_3": {
+        "input_length": 241,
+        "features_extracted": true,
+        "feature_count": 21,
+        "prediction_valid": true,
+        "soh": 29.671829469204827,
+        "condition": "Healthy"
+      }
+    }
+  },
+  "edge_cases": {
+    "status": "PASS",
+    "tests": {
+      "wrong_feature_count": "PASS - Correctly raises ValueError",
+      "extreme_values": {
+        "min_values": {
+          "soh": 1.1117686119928116,
+          "condition": "Healthy"
+        },
+        "max_values": {
+          "soh": 0.627121305500804,
+          "condition": "Healthy"
+        }
+      },
+      "boundary_classification": {
+        "below_threshold": "Has a Problem",
+        "above_threshold": "Healthy",
+        "boundary_correct": true
+      }
+    }
+  },
+  "summary": {
+    "total_tests": 7,
+    "passed": 7,
+    "failed": 0,
+    "success_rate": "100.0%"
+  }
+}
